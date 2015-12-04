@@ -1,9 +1,6 @@
 import numpy as np
 import sympy
-Assignment = sympy.printing.codeprinter.Assignment
-import numpy as np
-import sympy
-Assignment = sympy.printing.codeprinter.Assignment
+from sympy.printing.codeprinter import Assignment
 
 
 from pyne import nucname
