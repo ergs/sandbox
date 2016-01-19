@@ -1,6 +1,6 @@
 import numpy as np
 import sympy
-from sympy.printing.codeprinter import Assignment
+from sympy.printing.codeprinter import Assignment, CodeBlock
 
 
 from pyne import nucname
@@ -67,8 +67,20 @@ if __name__ == '__main__':
                                 nuc < 200000000]
     nucs.sort()
 
-    system = list(map(gennuc, nucs))
+    system = CodeBlock(*map(gennuc, nucs))
 
     with open('system.txt', 'w') as f:
-        for eq in system:
+        for eq in system.args:
+            f.write(sympy.srepr(eq) + '\n')
+
+    with open('system-C.txt', 'w') as f:
+        f.write(sympy.ccode(system))
+
+    system_cse = system.cse()
+
+    with open('system-cse.txt', 'w') as f:
+        for eq in system_cse.args:
             f.write(str(eq) + '\n')
+
+    with open('system-cse-C.txt', 'w') as f:
+        f.write(sympy.ccode(system_cse))
