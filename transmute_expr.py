@@ -47,8 +47,8 @@ def child_xss(nuc):
     return expr
 
 def gennuc(nuc):
-    nuc0, nuc1 = sympy.symbols('{0}_0 {0}_1'.format(name))
-    lambda_nuc = sympy.symbols('lambda_{0}'.format(name))
+    nuc0, nuc1 = sympy.symbols('{0}_0 {0}_1'.format(nuc))
+    lambda_nuc = sympy.symbols('lambda_{0}'.format(nuc))
     sigma_a_nuc = sympy.MatrixSymbol('sigma_a_{0}'.format(name), 1, G)
     rhs = sympy.exp(-((sigma_a_nuc*phi)[0] + lambda_nuc)*t) * nuc0
     rhs += child_decays(nuc)
@@ -57,19 +57,7 @@ def gennuc(nuc):
     return eq
 
 if __name__ == '__main__':
-    data.atomic_mass('U235')
-    nucs = set(data.atomic_mass_map.keys())
-    for nuc in data.atomic_mass_map:
-        nucm = nuc + 1
-        if nucname.anum(nuc) == 0 or data.decay_const(nucm) < 1e-16 or data.decay_const(nuc) == data.decay_const(nucm):
-            continue
-        nucs.add(nucm)
-    nucs = [nuc for nuc in nucs if nucname.anum(nuc) > 0 and
-                                not np.isnan(data.decay_const(nuc)) and
-                                nuc < 200000000]
-    nucs.sort()
-
-    system = CodeBlock(*map(gennuc, nucs))
+    system = CodeBlock(*map(gennuc, DATA['nucs']))
 
     with open('system.txt', 'w') as f:
         for eq in system.args:
