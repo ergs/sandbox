@@ -35,20 +35,18 @@ def child_decays(nuc):
     return expr
 
 def child_xss(nuc):
+    rxs = DATA['channels'][nuc]
     expr = 0
     for rx in xs_rxs:
-        try:
-            parent = rxname.parent(nuc, rx)
-        except RuntimeError:
+         if rx not in rxs:
             continue
-        parname = nucname.name(parent)
+        parname = rxs[rx]
         par0 = sympy.symbols('{0}_0'.format(parname))
         sigma_rx_par = sympy.MatrixSymbol('sigma_{0}_{1}'.format(rx, parname), 1, G)
         expr += sympy.exp((sigma_rx_par*phi)[0] * t) * par0
     return expr
 
 def gennuc(nuc):
-    name = nucname.name(nuc)
     nuc0, nuc1 = sympy.symbols('{0}_0 {0}_1'.format(name))
     lambda_nuc = sympy.symbols('lambda_{0}'.format(name))
     sigma_a_nuc = sympy.MatrixSymbol('sigma_a_{0}'.format(name), 1, G)

@@ -1,7 +1,10 @@
 import json
-
+import warnings
 import numpy as np
+warnings.simplefilter('ignore')
 
+from pyne.utils import toggle_warnings
+toggle_warnings()
 from pyne import nucname
 from pyne import data
 from pyne import rxname
