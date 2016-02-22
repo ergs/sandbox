@@ -1,11 +1,11 @@
+import re
+import json
 import numpy as np
 import sympy
 from sympy.codegen.ast import Assignment, CodeBlock
 
-
-from pyne import nucname
-from pyne import data
-from pyne import rxname
+with open('transmute_data.json') as f:
+    DATA = json.load(f)
 
 
 t, G = sympy.symbols('t G')
@@ -14,19 +14,23 @@ phi = sympy.MatrixSymbol('phi', G, 1)
 decay_rxs = ['bminus', 'bplus', 'ec', 'alpha', 'it', 'sf', 'bminus_n']
 xs_rxs = ['gamma', 'z_2n', 'z_3n', 'alpha', 'fission', 'proton', 'gamma_1', 'z_2n_1']
 
+gamma_base = re.compile('gamma_([A-Z][a-z]?\d+)_')
 
 def child_decays(nuc):
-    childname = nucname.name(nuc)
     expr = 0
     for rx in decay_rxs:
-        try:
-            parent = rxname.parent(nuc, rx, b'decay')
-        except RuntimeError:
+        r = re.compile(gamma_base + nuc + '_' + rx)
+        for key in DATA['symbols']:
+            m = r.match(key)
+            if m is not None:
+                parname = m.group(1)
+                gammaname = m.group(0)
+                break
+        else:
             continue
-        if data.branch_ratio(parent, nuc) < 1e-16:
-            continue
-        parname = nucname.name(parent)
-        par0, gamma, lambda_par = sympy.symbols('{0}_0 gamma_{0}_{1}_{2} lambda_{0}'.format(parname, childname, rx))
+        gamma = DATA['symbols'][gammaname]
+        lambda_par = DATA['symbols']['lambda_' + parname]
+        par0 = sympy.symbols('{0}_0'.format(parname))
         expr += gamma * sympy.exp(lambda_par * t) * par0
     return expr
 

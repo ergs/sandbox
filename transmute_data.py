@@ -26,6 +26,18 @@ def add_child_decays(nuc, symbols):
         symbols[gamma] = data.branch_ratio(parent, nuc)
 
 
+def add_child_xss(nuc, channels):
+    childname = nucname.name(nuc)
+    channels[childname] = rxs = {}
+    for rx in XS_RXS:
+        try:
+            parent = rxname.parent(nuc, rx)
+        except RuntimeError:
+            continue
+        parname = nucname.name(parent)
+        rxs[rx] = parname
+
+
 def main():
     # get list of nuclides
     data.atomic_mass('U235')
@@ -42,10 +54,13 @@ def main():
     nucs.sort()
     # get symbols
     symbols = {}
+    channels = {}
     for nuc in nucs:
         add_child_decays(nuc, symbols)
+        add_child_xss(nuc, channels)
     # print symbols
-    d = {'symbols': symbols, 'nucs': list(map(nucname.name, nucs))}
+    d = {'symbols': symbols, 'nucs': list(map(nucname.name, nucs)), 
+         'channels': channels}
     s = json.dumps(d, indent=4, sort_keys=True)
     print(s)
 
