@@ -14,13 +14,14 @@ phi = sympy.MatrixSymbol('phi', G, 1)
 decay_rxs = ['bminus', 'bplus', 'ec', 'alpha', 'it', 'sf', 'bminus_n']
 xs_rxs = ['gamma', 'z_2n', 'z_3n', 'alpha', 'fission', 'proton', 'gamma_1', 'z_2n_1']
 
-gamma_base = re.compile('gamma_([A-Z][a-z]?\d+)_')
+gamma_base = 'gamma_([A-Z][a-z]?\d+)_'
 
 def child_decays(nuc):
+    symbols = DATA['symbols']
     expr = 0
     for rx in decay_rxs:
         r = re.compile(gamma_base + nuc + '_' + rx)
-        for key in DATA['symbols']:
+        for key in symbols:
             m = r.match(key)
             if m is not None:
                 parname = m.group(1)
@@ -28,8 +29,8 @@ def child_decays(nuc):
                 break
         else:
             continue
-        gamma = DATA['symbols'][gammaname]
-        lambda_par = DATA['symbols']['lambda_' + parname]
+        gamma = symbols[gammaname]
+        lambda_par = symbols['lambda_' + parname]
         par0 = sympy.symbols('{0}_0'.format(parname))
         expr += gamma * sympy.exp(lambda_par * t) * par0
     return expr
@@ -38,7 +39,7 @@ def child_xss(nuc):
     rxs = DATA['channels'][nuc]
     expr = 0
     for rx in xs_rxs:
-         if rx not in rxs:
+        if rx not in rxs:
             continue
         parname = rxs[rx]
         par0 = sympy.symbols('{0}_0'.format(parname))
@@ -49,7 +50,7 @@ def child_xss(nuc):
 def gennuc(nuc):
     nuc0, nuc1 = sympy.symbols('{0}_0 {0}_1'.format(nuc))
     lambda_nuc = sympy.symbols('lambda_{0}'.format(nuc))
-    sigma_a_nuc = sympy.MatrixSymbol('sigma_a_{0}'.format(name), 1, G)
+    sigma_a_nuc = sympy.MatrixSymbol('sigma_a_{0}'.format(nuc), 1, G)
     rhs = sympy.exp(-((sigma_a_nuc*phi)[0] + lambda_nuc)*t) * nuc0
     rhs += child_decays(nuc)
     rhs += child_xss(nuc)
@@ -57,7 +58,7 @@ def gennuc(nuc):
     return eq
 
 if __name__ == '__main__':
-    system = CodeBlock(*map(gennuc, DATA['nucs']))
+    system = CodeBlock(*list(map(gennuc, DATA['nucs'])))
 
     with open('system.txt', 'w') as f:
         for eq in system.args:
