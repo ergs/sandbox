@@ -1,6 +1,6 @@
 import numpy as np
 import sympy
-from sympy.printing.codeprinter import Assignment, CodeBlock
+from sympy.codegen.ast import Assignment, CodeBlock
 
 
 from pyne import nucname
