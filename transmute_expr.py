@@ -14,13 +14,13 @@ phi = sympy.MatrixSymbol('phi', G, 1)
 decay_rxs = ['bminus', 'bplus', 'ec', 'alpha', 'it', 'sf', 'bminus_n']
 xs_rxs = ['gamma', 'z_2n', 'z_3n', 'alpha', 'fission', 'proton', 'gamma_1', 'z_2n_1']
 
-gamma_base = 'gamma_([A-Z][a-z]?\d+)_'
+gamma_base = '^gamma_([A-Z][a-z]?\d+)_'
 
 def child_decays(nuc):
     symbols = DATA['symbols']
     expr = 0
     for rx in decay_rxs:
-        r = re.compile(gamma_base + nuc + '_' + rx)
+        r = re.compile(gamma_base + nuc + '_' + rx + '$')
         for key in symbols:
             m = r.match(key)
             if m is not None:
@@ -58,7 +58,7 @@ def gennuc(nuc):
     return eq
 
 if __name__ == '__main__':
-    system = CodeBlock(*list(map(gennuc, DATA['nucs'])))
+    system = CodeBlock(*map(gennuc, DATA['nucs']))
 
     with open('system.txt', 'w') as f:
         for eq in system.args:
@@ -67,11 +67,11 @@ if __name__ == '__main__':
     with open('system-C.txt', 'w') as f:
         f.write(sympy.ccode(system))
 
-    system_cse = system.cse()
+    #system_cse = system.cse()
 
-    with open('system-cse.txt', 'w') as f:
-        for eq in system_cse.args:
-            f.write(str(eq) + '\n')
+    #with open('system-cse.txt', 'w') as f:
+    #    for eq in system_cse.args:
+    #        f.write(str(eq) + '\n')
 
-    with open('system-cse-C.txt', 'w') as f:
-        f.write(sympy.ccode(system_cse))
+    #with open('system-cse-C.txt', 'w') as f:
+    #    f.write(sympy.ccode(system_cse))
