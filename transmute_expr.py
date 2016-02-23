@@ -31,7 +31,8 @@ def child_decays(nuc):
         gamma = symbols[gammaname]
         lambda_par = symbols['lambda_' + parname]
         par0 = sympy.symbols('{0}_0'.format(parname))
-        expr += gamma * sympy.exp(lambda_par * t) * par0
+        if lambda_par >= 0: # Avoid nan
+            expr += gamma * sympy.exp(lambda_par * t) * par0
     return expr
 
 def child_xss(nuc):
