@@ -7,7 +7,8 @@ with open('transmute_data.json') as f:
     DATA = json.load(f)
 
 
-t, G = sympy.symbols('t G')
+t= sympy.symbols('t')
+G = 1
 phi = sympy.MatrixSymbol('phi', G, 1)
 
 decay_rxs = ['bminus', 'bplus', 'ec', 'alpha', 'it', 'sf', 'bminus_n']
