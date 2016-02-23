@@ -1,6 +1,5 @@
 import re
 import json
-import numpy as np
 import sympy
 from sympy.codegen.ast import Assignment, CodeBlock
 
