@@ -8,8 +8,9 @@ with open('transmute_data.json') as f:
 
 
 t= sympy.symbols('t')
-G = 1
-phi = sympy.MatrixSymbol('phi', G, 1)
+# G = 1
+# phi = sympy.MatrixSymbol('phi', G, 1)
+phi = sympy.symbols('phi')
 
 decay_rxs = ['bminus', 'bplus', 'ec', 'alpha', 'it', 'sf', 'bminus_n']
 xs_rxs = ['gamma', 'z_2n', 'z_3n', 'alpha', 'fission', 'proton', 'gamma_1', 'z_2n_1']
@@ -44,19 +45,22 @@ def child_xss(nuc):
             continue
         parname = rxs[rx]
         par0 = sympy.symbols('{0}_0'.format(parname))
-        sigma_rx_par = sympy.MatrixSymbol('sigma_{0}_{1}'.format(rx, parname), 1, G)
+        # sigma_rx_par = sympy.MatrixSymbol('sigma_{0}_{1}'.format(rx, parname), 1, G)
+        sigma_rx_par = sympy.Symbol('sigma_{0}_{1}'.format(rx, parname))
         expr += sympy.exp((sigma_rx_par*phi)[0] * t) * par0
     return expr
 
 def gennuc(nuc):
     nuc0, nuc1 = sympy.symbols('{0}_0 {0}_1'.format(nuc))
     lambda_nuc = sympy.symbols('lambda_{0}'.format(nuc))
-    sigma_a_nuc = sympy.MatrixSymbol('sigma_a_{0}'.format(nuc), 1, G)
+    # sigma_a_nuc = sympy.MatrixSymbol('sigma_a_{0}'.format(nuc), 1, G)
+    sigma_a_nuc = sympy.Symbol('sigma_a_{0}'.format(nuc))
     rhs = sympy.exp(-((sigma_a_nuc*phi)[0] + lambda_nuc)*t) * nuc0
     rhs += child_decays(nuc)
     rhs += child_xss(nuc)
     eq = Assignment(nuc1, rhs)
     return eq
+
 
 if __name__ == '__main__':
     system = CodeBlock(*map(gennuc, DATA['nucs']))
