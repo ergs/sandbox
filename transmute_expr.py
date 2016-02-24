@@ -93,7 +93,7 @@ if __name__ == '__main__':
 
     with open('system.txt', 'w') as f:
         for eq in system.args:
-            f.write(sympy.srepr(eq) + '\n')
+            f.write(str(eq) + '\n')
 
     with open('system-C.txt', 'w') as f:
         f.write(sympy.ccode(system))
