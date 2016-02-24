@@ -39,7 +39,7 @@ def child_decays(nuc):
 
 def child_xss(nuc):
     rxs = DATA['channels'][nuc]
-    expr = 0
+    terms = []
     for rx in xs_rxs:
         if rx not in rxs:
             continue
@@ -48,8 +48,8 @@ def child_xss(nuc):
         # sigma_rx_par = sympy.MatrixSymbol('sigma_{0}_{1}'.format(rx, parname), 1, G)
         sigma_rx_par = sympy.Symbol('sigma_{0}_{1}'.format(rx, parname))
         # expr += sympy.exp((sigma_rx_par*phi)[0] * t) * par0
-        expr += sympy.exp((sigma_rx_par*phi) * t) * par0
-    return expr
+        terms.append(sympy.exp((sigma_rx_par*phi) * t) * par0)
+    return sympy.Add(*terms)
 
 def gennuc(nuc):
     nuc0, nuc1 = sympy.symbols('{0}_0 {0}_1'.format(nuc))
