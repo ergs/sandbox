@@ -47,7 +47,8 @@ def child_xss(nuc):
         par0 = sympy.symbols('{0}_0'.format(parname))
         # sigma_rx_par = sympy.MatrixSymbol('sigma_{0}_{1}'.format(rx, parname), 1, G)
         sigma_rx_par = sympy.Symbol('sigma_{0}_{1}'.format(rx, parname))
-        expr += sympy.exp((sigma_rx_par*phi)[0] * t) * par0
+        # expr += sympy.exp((sigma_rx_par*phi)[0] * t) * par0
+        expr += sympy.exp((sigma_rx_par*phi) * t) * par0
     return expr
 
 def gennuc(nuc):
@@ -55,7 +56,8 @@ def gennuc(nuc):
     lambda_nuc = sympy.symbols('lambda_{0}'.format(nuc))
     # sigma_a_nuc = sympy.MatrixSymbol('sigma_a_{0}'.format(nuc), 1, G)
     sigma_a_nuc = sympy.Symbol('sigma_a_{0}'.format(nuc))
-    rhs = sympy.exp(-((sigma_a_nuc*phi)[0] + lambda_nuc)*t) * nuc0
+    # rhs = sympy.exp(-((sigma_a_nuc*phi)[0] + lambda_nuc)*t) * nuc0
+    rhs = sympy.exp(-((sigma_a_nuc*phi) + lambda_nuc)*t) * nuc0
     rhs += child_decays(nuc)
     rhs += child_xss(nuc)
     eq = Assignment(nuc1, rhs)
