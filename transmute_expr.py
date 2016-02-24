@@ -63,7 +63,7 @@ def gennuc(nuc):
 
 
 if __name__ == '__main__':
-    system = CodeBlock(*map(gennuc, DATA['nucs']))
+    system = CodeBlock(*list(map(gennuc, DATA['nucs'])))
 
     with open('system.txt', 'w') as f:
         for eq in system.args:
