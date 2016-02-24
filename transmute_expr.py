@@ -66,6 +66,11 @@ def gennuc(nuc):
     eq = Assignment(nuc1, rhs)
     return eq
 
+def sigma_symbol_to_indexed():
+    sigma_symbols = [[sympy.Symbol('sigma_{0}_{1}'.format(rx, nuc)) for rx in xs_rxs + ['a']] for nuc in DATA['nucs']]
+    mapping = {sigma_symbols[i][j]: sympy.Symbol('sigma[{0}][{1}]'.format(i, j)) for i in range(len(sigma_symbols)) for j in range(9)}
+
+    return mapping
 
 def generate_sigma_array():
     sigma_symbols = [['sigma_{0}_{1}'.format(rx, nuc) for rx in xs_rxs + ['a']] for nuc in DATA['nucs']]
@@ -87,6 +92,10 @@ if __name__ == '__main__':
 
     sigma_symbols = sorted([i.name for i in system.free_symbols if
         i.name.startswith('sigma')])
+
+    sigma_map = sigma_symbol_to_indexed()
+
+    system = system.xreplace(sigma_map)
 
     with open("sigma_array.txt", 'w') as f:
         f.write('[' + ',\n'.join(map(str, generate_sigma_array())) + ']\n')
