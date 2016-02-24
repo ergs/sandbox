@@ -10,7 +10,7 @@ from pyne import data
 from pyne import rxname
 
 DECAY_RXS = ['bminus', 'bplus', 'ec', 'alpha', 'it', 'sf', 'bminus_n']
-XS_RXS = ['gamma', 'z_2n', 'z_3n', 'alpha', 'fission', 'proton', 'gamma_1', 
+XS_RXS = ['gamma', 'z_2n', 'z_3n', 'alpha', 'fission', 'proton', 'gamma_1',
           'z_2n_1']
 
 
@@ -62,7 +62,7 @@ def main():
         add_child_decays(nuc, symbols)
         add_child_xss(nuc, channels)
     # print symbols
-    d = {'symbols': symbols, 'nucs': list(map(nucname.name, nucs)), 
+    d = {'symbols': symbols, 'nucs': list(map(nucname.name, nucs)),
          'channels': channels}
     s = json.dumps(d, indent=4, sort_keys=True)
     print(s)
