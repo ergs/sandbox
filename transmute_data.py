@@ -29,13 +29,15 @@ def add_child_decays(nuc, symbols):
         symbols[gamma] = data.branch_ratio(parent, nuc)
 
 
-def add_child_xss(nuc, channels):
+def add_child_xss(nuc, channels, parents):
     childname = nucname.name(nuc)
     channels[childname] = rxs = {}
     for rx in XS_RXS:
         try:
             parent = rxname.parent(nuc, rx)
         except RuntimeError:
+            continue
+        if parent not in parents:
             continue
         parname = nucname.name(parent)
         rxs[rx] = parname
@@ -60,7 +62,7 @@ def main():
     channels = {}
     for nuc in nucs:
         add_child_decays(nuc, symbols)
-        add_child_xss(nuc, channels)
+        add_child_xss(nuc, channels, nucs)
     # print symbols
     d = {'symbols': symbols, 'nucs': list(map(nucname.name, nucs)),
          'channels': channels}
