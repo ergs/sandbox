@@ -64,8 +64,29 @@ def gennuc(nuc):
     return eq
 
 
+def generate_sigma_array():
+    sigma_symbols = [['sigma_{0}_{1}'.format(rx, nuc) for rx in xs_rxs + ['a']] for nuc in DATA['nucs']]
+
+    with open('sigma.json') as f:
+        sigma = json.load(f)
+
+    # We don't use all nucs
+    used_sigmas = set()
+    for i in sigma:
+        *_, nuc = i.rpartition('_')
+        if nuc in DATA['nucs']:
+            used_sigmas.add(i)
+
+    return [[sigma[i] if i in used_sigmas else 0.0 for i in j] for j in sigma_symbols]
+
 if __name__ == '__main__':
     system = CodeBlock(*list(map(gennuc, DATA['nucs'])))
+
+    sigma_symbols = sorted([i.name for i in system.free_symbols if
+        i.name.startswith('sigma')])
+
+    with open("sigma_array.txt", 'w') as f:
+        f.write('[' + ',\n'.join(map(str, generate_sigma_array())) + ']\n')
 
     with open('system.txt', 'w') as f:
         for eq in system.args:
