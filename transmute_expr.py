@@ -39,7 +39,7 @@ def child_decays(nuc):
 
 def child_xss(nuc):
     rxs = DATA['channels'][nuc]
-    expr = 0
+    terms = []
     for rx in xs_rxs:
         if rx not in rxs:
             continue
@@ -48,28 +48,61 @@ def child_xss(nuc):
         # sigma_rx_par = sympy.MatrixSymbol('sigma_{0}_{1}'.format(rx, parname), 1, G)
         sigma_rx_par = sympy.Symbol('sigma_{0}_{1}'.format(rx, parname))
         # expr += sympy.exp((sigma_rx_par*phi)[0] * t) * par0
-        expr += sympy.exp((sigma_rx_par*phi) * t) * par0
-    return expr
+        terms.append(sympy.exp((sigma_rx_par*phi) * t) * par0)
+    return sympy.Add(*terms)
 
 def gennuc(nuc):
     nuc0, nuc1 = sympy.symbols('{0}_0 {0}_1'.format(nuc))
-    lambda_nuc = sympy.symbols('lambda_{0}'.format(nuc))
+    lambda_nuc = DATA['symbols'].get('lambda_{0}'.format(nuc), sympy.oo)
     # sigma_a_nuc = sympy.MatrixSymbol('sigma_a_{0}'.format(nuc), 1, G)
     sigma_a_nuc = sympy.Symbol('sigma_a_{0}'.format(nuc))
     # rhs = sympy.exp(-((sigma_a_nuc*phi)[0] + lambda_nuc)*t) * nuc0
-    rhs = sympy.exp(-((sigma_a_nuc*phi) + lambda_nuc)*t) * nuc0
+    if lambda_nuc == sympy.oo:
+        rhs = 0
+    else:
+        rhs = sympy.exp(-((sigma_a_nuc*phi) + lambda_nuc)*t) * nuc0
     rhs += child_decays(nuc)
     rhs += child_xss(nuc)
     eq = Assignment(nuc1, rhs)
     return eq
 
+def sigma_symbol_to_indexed():
+    sigma_symbols = [[sympy.Symbol('sigma_{0}_{1}'.format(rx, nuc)) for rx in xs_rxs + ['a']] for nuc in DATA['nucs']]
+    mapping = {sigma_symbols[i][j]: sympy.Symbol('sigma[{0}][{1}]'.format(i, j)) for i in range(len(sigma_symbols)) for j in range(9)}
+
+    return mapping
+
+def generate_sigma_array():
+    sigma_symbols = [['sigma_{0}_{1}'.format(rx, nuc) for rx in xs_rxs + ['a']] for nuc in DATA['nucs']]
+
+    with open('sigma.json') as f:
+        sigma = json.load(f)
+
+    # We don't use all nucs
+    used_sigmas = set()
+    for i in sigma:
+        *_, nuc = i.rpartition('_')
+        if nuc in DATA['nucs']:
+            used_sigmas.add(i)
+
+    return [[sigma[i] if i in used_sigmas else 0.0 for i in j] for j in sigma_symbols]
 
 if __name__ == '__main__':
     system = CodeBlock(*list(map(gennuc, DATA['nucs'])))
 
+    sigma_symbols = sorted([i.name for i in system.free_symbols if
+        i.name.startswith('sigma')])
+
+    sigma_map = sigma_symbol_to_indexed()
+
+    system = system.xreplace(sigma_map)
+
+    with open("sigma_array.txt", 'w') as f:
+        f.write('[' + ',\n'.join(map(str, generate_sigma_array())) + ']\n')
+
     with open('system.txt', 'w') as f:
         for eq in system.args:
-            f.write(sympy.srepr(eq) + '\n')
+            f.write(str(eq) + '\n')
 
     with open('system-C.txt', 'w') as f:
         f.write(sympy.ccode(system))
