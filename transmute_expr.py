@@ -1,7 +1,43 @@
+import textwrap
 import re
 import json
 import sympy
 from sympy.codegen.ast import Assignment, CodeBlock
+
+TEMPLATE = r"""\
+#include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
+
+#define I (%%I%%)
+#define R (9)
+
+double* transmute(double* N0, double t, double phi, double sigma[I][R]);
+
+double* transmute(double* N0, double t, double phi, double sigma[I][R]) {
+
+    double* N1 = malloc(I*sizeof(double));
+
+%%CODE%%
+
+    return(N1);
+}
+
+int main() {
+    int i;
+    double N0[I] = %%N0%%;
+    double* N1;
+    double sigma[I][R] = %%SIGMA_ARRAY%%;
+
+    N1 = transmute(N0, 10.0, 4e-10, sigma);
+
+    for (i=0; i < I; i++) {
+        printf("%d %f\n", i, N1[i]);
+    }
+    return(0);
+}
+
+"""
 
 with open('transmute_data.json') as f:
     DATA = json.load(f)
@@ -29,6 +65,8 @@ def child_decays(nuc):
                 gammaname = m.group(0)
                 break
         else:
+            continue
+        if parname not in DATA['nucs']:
             continue
         gamma = symbols[gammaname]
         lambda_par = symbols['lambda_' + parname]
@@ -105,18 +143,37 @@ if __name__ == '__main__':
 
     sigma_map = sigma_symbol_to_indexed()
     nuc_map = nuc_symbol_to_indexed()
+    # nuc_map = {}
 
     system = system.xreplace({**sigma_map, **nuc_map})
 
+    sigma_array = generate_sigma_array()
+
+    code = sympy.ccode(system)
+
+    generated_code = TEMPLATE
+    for val, repl in {
+        "I": len(DATA['nucs']),
+        "SIGMA_ARRAY": str(sigma_array).replace('[', '{').replace(']', '}'),
+        "CODE": textwrap.indent(code, '    '),
+        # For testing
+        "N0": str([0.]*(len(DATA['nucs']) - 1) + [1.0]).replace('[',
+            '{').replace(']', '}'),
+    }.items():
+        generated_code = generated_code.replace("%%" + val + "%%", str(repl))
+
     with open("sigma_array.txt", 'w') as f:
-        f.write('[' + ',\n'.join(map(str, generate_sigma_array())) + ']\n')
+        f.write('[' + ',\n'.join(map(str, sigma_array)) + ']\n')
 
     with open('system.txt', 'w') as f:
         for eq in system.args:
             f.write(str(eq) + '\n')
 
     with open('system-C.txt', 'w') as f:
-        f.write(sympy.ccode(system))
+        f.write(code)
+
+    with open('transmute.c', 'w') as f:
+        f.write(generated_code)
 
     #system_cse = system.cse()
 
