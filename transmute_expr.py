@@ -48,11 +48,6 @@ with open('sigma.json') as f:
 
 
 
-t = sympy.symbols('t')
-# G = 1
-# phi = sympy.MatrixSymbol('phi', G, 1)
-phi = sympy.symbols('phi')
-
 decay_rxs = ['bminus', 'bplus', 'ec', 'alpha', 'it', 'sf', 'bminus_n']
 xs_rxs = ['gamma', 'z_2n', 'z_3n', 'alpha', 'fission', 'proton', 'gamma_1', 'z_2n_1']
 
@@ -101,6 +96,10 @@ for nuc in DATA['nucs']:
     CHAINS.update(make_chains(nuc))
 CHAINS = sorted(CHAINS, key=lambda c: c[-1])
 
+t = sympy.symbols('t')
+# G = 1
+# phi = sympy.MatrixSymbol('phi', G, 1)
+phi = sympy.symbols('phi')
 
 def decay_const(nuc):
     return DATA['symbols']['lambda_' + nuc]
@@ -141,9 +140,12 @@ def sigma_a(nuc):
 
 
 def genexponent(nuc):
-    lamda_1 = decay_const(nuc)
+    lambda_1 = decay_const(nuc)
     sig_a = sigma_a(nuc)
-    return sympy.exp(-(lamda_1 + sig_a*phi)*t)
+    try:
+        return sympy.exp(-(lambda_1 + sig_a*phi)*t)
+    except:
+        import pdb; pdb.set_trace()
 
 
 def gentotalbranch(chain):
@@ -167,7 +169,7 @@ def genci(nuc, chain):
             continue
         lambda_j = decay_const(j)
         sig_a_j = sigma_a(j)
-        part_j = lambda_j + sig_a * phi
+        part_j = lambda_j + sig_a_j * phi
         term = 1 / (part_j - part_i)
         terms.append(term)
     return sympy.Mul(*terms)
@@ -189,21 +191,17 @@ def genchainexpr(chain):
         return nuc0 * genexponent(chain[0])
     tb = gentotalbranch(chain)
     ce = genciexp(chain)
-    return nuc0 * tb * cd
+    return nuc0 * tb * ce
 
 
 def gennuc(nuc):
-    nuc0, nuc1 = sympy.symbols('{0}_0 {0}_1'.format(nuc))
-    lambda_nuc = DATA['symbols'].get('lambda_{0}'.format(nuc), sympy.oo)
-    # sigma_a_nuc = sympy.MatrixSymbol('sigma_a_{0}'.format(nuc), 1, G)
-    sigma_a_nuc = sympy.Symbol('sigma_a_{0}'.format(nuc))
-    # rhs = sympy.exp(-((sigma_a_nuc*phi)[0] + lambda_nuc)*t) * nuc0
-    if lambda_nuc == sympy.oo:
-        rhs = 0
-    else:
-        rhs = sympy.exp(-((sigma_a_nuc*phi) + lambda_nuc)*t) * nuc0
-    rhs += child_decays(nuc)
-    rhs += child_xss(nuc)
+    nuc1 = sympy.symbols('{0}_1'.format(nuc))
+    terms = []
+    for chain in CHAINS:
+        if chain[-1] != nuc:
+            continue
+        terms.append(genchainexpr(chain))
+    rhs = sympy.Add(*terms)
     eq = Assignment(nuc1, rhs)
     return eq
 
@@ -228,15 +226,16 @@ def generate_sigma_array():
 
     # We don't use all nucs
     used_sigmas = set()
-    for i in sigma:
+    for i in SIGMA:
         *_, nuc = i.rpartition('_')
         if nuc in DATA['nucs']:
             used_sigmas.add(i)
 
-    return [[sigma[i] if i in used_sigmas else 0.0 for i in j] for j in sigma_symbols]
+    return [[SIGMA[i][0] if i in used_sigmas else 0.0 for i in j] for j in sigma_symbols]
 
 if __name__ == '__main__':
-    system = CodeBlock(*list(map(gennuc, DATA['nucs'])))
+    nucs = DATA['nucs'][:1]
+    system = CodeBlock(*list(map(gennuc, nucs)))
 
     sigma_symbols = sorted([i.name for i in system.free_symbols if
         i.name.startswith('sigma')])
@@ -253,11 +252,11 @@ if __name__ == '__main__':
 
     generated_code = TEMPLATE
     for val, repl in {
-        "I": len(DATA['nucs']),
+        "I": len(nucs),
         "SIGMA_ARRAY": str(sigma_array).replace('[', '{').replace(']', '}'),
         "CODE": textwrap.indent(code, '    '),
         # For testing
-        "N0": str([0.]*(len(DATA['nucs']) - 1) + [1.0]).replace('[',
+        "N0": str([0.]*(len(nucs) - 1) + [1.0]).replace('[',
             '{').replace(']', '}'),
     }.items():
         generated_code = generated_code.replace("%%" + val + "%%", str(repl))
