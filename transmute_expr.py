@@ -42,8 +42,12 @@ int main() {
 with open('transmute_data.json') as f:
     DATA = json.load(f)
 
+with open('sigma.json') as f:
+    SIGMA = json.load(f)
 
-t= sympy.symbols('t')
+
+
+t = sympy.symbols('t')
 # G = 1
 # phi = sympy.MatrixSymbol('phi', G, 1)
 phi = sympy.symbols('phi')
@@ -52,6 +56,29 @@ decay_rxs = ['bminus', 'bplus', 'ec', 'alpha', 'it', 'sf', 'bminus_n']
 xs_rxs = ['gamma', 'z_2n', 'z_3n', 'alpha', 'fission', 'proton', 'gamma_1', 'z_2n_1']
 
 gamma_base = '^gamma_([A-Z][a-z]?\d+)_'
+
+# Create from -> to nuclide mapping
+FROM_TO = {}
+def add_from_to(f, t, k):
+    if f not in FROM_TO:
+        FROM_TO[f] = {}
+    to_nucs = FROM_TO[f]
+    if t not in to_nucs:
+        to_nucs[t] = set()
+    rxs = to_nucs[t]
+    rxs.add(k)
+
+for key in DATA['symbols'].keys():
+    if not key.startswith('gamma_'):
+        continue
+    _, f, t, *_ = key.split('_')
+    add_from_to(f, t, key)
+
+for sig, (val, f, t) in SIGMA.items():
+    if t is None or val < 1e-200:
+        continue
+    add_from_to(f, t, sig)
+
 
 def child_decays(nuc):
     symbols = DATA['symbols']
@@ -122,9 +149,6 @@ def nuc_symbol_to_indexed():
 
 def generate_sigma_array():
     sigma_symbols = [['sigma_{0}_{1}'.format(rx, nuc) for rx in xs_rxs + ['a']] for nuc in DATA['nucs']]
-
-    with open('sigma.json') as f:
-        sigma = json.load(f)
 
     # We don't use all nucs
     used_sigmas = set()
