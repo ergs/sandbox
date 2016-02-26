@@ -3,7 +3,7 @@ import json
 import sympy
 from sympy.codegen.ast import Assignment, CodeBlock
 
-TEMPLATE = r"""\
+TEMPLATE = r"""
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
