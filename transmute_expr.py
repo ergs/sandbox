@@ -1,7 +1,5 @@
 import textwrap
-import re
 import json
-import itertools
 import sympy
 from sympy.codegen.ast import Assignment, CodeBlock
 
