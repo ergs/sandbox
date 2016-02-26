@@ -31,7 +31,7 @@ int main() {
     N1 = transmute(N0, 10.0, 4e-10, sigma);
 
     for (i=0; i < I; i++) {
-        printf("%d %f\n", i, N1[i]);
+        printf("%d %e\n", i, N1[i]);
     }
     return(0);
 }
