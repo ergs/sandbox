@@ -253,11 +253,11 @@ if __name__ == '__main__':
 
     generated_code = TEMPLATE
     for val, repl in {
-        "I": len(nucs),
+        "I": len(sigma_array),
         "SIGMA_ARRAY": str(sigma_array).replace('[', '{').replace(']', '}'),
         "CODE": textwrap.indent(code, '    '),
         # For testing
-        "N0": str([0.]*(len(nucs) - 1) + [1.0]).replace('[',
+        "N0": str([0.]*(len(sigma_array) - 1) + [1.0]).replace('[',
             '{').replace(']', '}'),
     }.items():
         generated_code = generated_code.replace("%%" + val + "%%", str(repl))
