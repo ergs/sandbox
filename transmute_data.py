@@ -15,7 +15,10 @@ XS_RXS = ['gamma', 'z_2n', 'z_3n', 'alpha', 'fission', 'proton', 'gamma_1',
 
 
 def add_child_decays(nuc, symbols):
-    childname = nucname.name(nuc)
+    try:
+        childname = nucname.name(nuc)
+    except RuntimeError:
+        return
     for rx in DECAY_RXS:
         try:
             parent = rxname.parent(nuc, rx, b'decay')
@@ -30,7 +33,10 @@ def add_child_decays(nuc, symbols):
 
 
 def add_child_xss(nuc, channels, parents):
-    childname = nucname.name(nuc)
+    try:
+        childname = nucname.name(nuc)
+    except RuntimeError:
+        return
     channels[childname] = rxs = {}
     for rx in XS_RXS:
         try:
@@ -39,7 +45,10 @@ def add_child_xss(nuc, channels, parents):
             continue
         if parent not in parents:
             continue
-        parname = nucname.name(parent)
+        try:
+            parname = nucname.name(parent)
+        except RuntimeError:
+            continue
         rxs[rx] = parname
 
 
@@ -53,9 +62,10 @@ def main():
                             data.decay_const(nuc) == data.decay_const(nucm):
             continue
         nucs.add(nucm)
-    nucs = [nuc for nuc in nucs if nucname.anum(nuc) > 0 and
-                                not np.isnan(data.decay_const(nuc)) and
-                                nuc < 200000000]
+    nucs = [nuc for nuc in nucs if nucname.anum(nuc) > 0]
+    #and
+    #                            not np.isnan(data.decay_const(nuc)) and
+    #                            nuc < 200000000]
     nucs.sort()
     # get symbols
     symbols = {}
@@ -64,8 +74,15 @@ def main():
         add_child_decays(nuc, symbols)
         add_child_xss(nuc, channels, nucs)
     # print symbols
-    d = {'symbols': symbols, 'nucs': list(map(nucname.name, nucs)),
-         'channels': channels}
+    ns = []
+    for nuc in nucs:
+        try:
+            nname = nucname.name(nuc)
+        except RuntimeError:
+            continue
+        ns.append(nname)
+    nucs = ns
+    d = {'symbols': symbols, 'nucs': nucs, 'channels': channels}
     s = json.dumps(d, indent=4, sort_keys=True)
     print(s)
 

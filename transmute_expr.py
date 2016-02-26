@@ -91,7 +91,7 @@ def make_chains(f, curr=()):
     return chains
 
 CHAINS = set()
-for nuc in DATA['nucs']:
+for nuc in DATA['nucs'][:346]:
     #print(nuc)
     CHAINS.update(make_chains(nuc))
 CHAINS = sorted(CHAINS, key=lambda c: c[-1])
@@ -197,10 +197,13 @@ def genchainexpr(chain):
 def gennuc(nuc):
     nuc1 = sympy.symbols('{0}_1'.format(nuc))
     terms = []
+    NUM = 0
     for chain in CHAINS:
         if chain[-1] != nuc:
             continue
-        terms.append(genchainexpr(chain))
+        NUM += 1
+        #terms.append(genchainexpr(chain))
+    print(NUM, nuc)
     rhs = sympy.Add(*terms)
     eq = Assignment(nuc1, rhs)
     return eq
@@ -234,7 +237,7 @@ def generate_sigma_array():
     return [[SIGMA[i][0] if i in used_sigmas else 0.0 for i in j] for j in sigma_symbols]
 
 if __name__ == '__main__':
-    nucs = DATA['nucs'][:1]
+    nucs = DATA['nucs'][:346]
     system = CodeBlock(*list(map(gennuc, nucs)))
 
     sigma_symbols = sorted([i.name for i in system.free_symbols if
