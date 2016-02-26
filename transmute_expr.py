@@ -265,9 +265,9 @@ if __name__ == '__main__':
     with open("sigma_array.txt", 'w') as f:
         f.write('[' + ',\n'.join(map(str, sigma_array)) + ']\n')
 
-    with open('system.txt', 'w') as f:
-        for eq in system.args:
-            f.write(str(eq) + '\n')
+    # with open('system.txt', 'w') as f:
+    #     for eq in system.args:
+    #         f.write(str(eq) + '\n')
 
     with open('system-C.txt', 'w') as f:
         f.write(code)
