@@ -1,6 +1,7 @@
 import textwrap
 import re
 import json
+import itertools
 import sympy
 from sympy.codegen.ast import Assignment, CodeBlock
 
@@ -80,41 +81,116 @@ for sig, (val, f, t) in SIGMA.items():
     add_from_to(f, t, sig)
 
 
-def child_decays(nuc):
-    symbols = DATA['symbols']
-    expr = 0
-    for rx in decay_rxs:
-        r = re.compile(gamma_base + nuc + '_' + rx + '$')
-        for key in symbols:
-            m = r.match(key)
-            if m is not None:
-                parname = m.group(1)
-                gammaname = m.group(0)
-                break
-        else:
-            continue
-        if parname not in DATA['nucs']:
-            continue
-        gamma = symbols[gammaname]
-        lambda_par = symbols['lambda_' + parname]
-        par0 = sympy.symbols('{0}_0'.format(parname))
-        if lambda_par >= 0: # Avoid nan
-            expr += gamma * sympy.exp(lambda_par * t) * par0
-    return expr
+def make_chains(f, curr=()):
+    if len(curr) == 0:
+        curr = (f,)
+    chains = [curr]
+    if len(curr) > 21:
+        return chains
+    for t in FROM_TO.get(f, ()):
+        if t in curr:
+            continue  # get rid of cycles
+        tchain = curr + (t,)
+        newchains = make_chains(t, tchain)
+        chains.extend(newchains)
+    return chains
 
-def child_xss(nuc):
-    rxs = DATA['channels'][nuc]
+CHAINS = set()
+for nuc in DATA['nucs']:
+    #print(nuc)
+    CHAINS.update(make_chains(nuc))
+CHAINS = sorted(CHAINS, key=lambda c: c[-1])
+
+
+def decay_const(nuc):
+    return DATA['symbols']['lambda_' + nuc]
+
+
+def gamma(f, t):
+    prefix = 'gamma_{0}_{1}_'.format(f, t)
+    possible = FROM_TO[f][t]
+    for p in possible:
+        if p.startswith(prefix):
+            rx = p
+            break
+    else:
+        return 0
+    return DATA['symbols'].get(rx, 0)
+
+
+def sigma_rx(f, t):
+    possible = FROM_TO[f][t]
+    for p in possible:
+        if p.startswith('sigma_') and p.endswith(f):
+            rx = p
+            break
+    else:
+        return 0
+    sigma = SIGMA.get(rx, [0])[0]
+    if sigma > 0:
+        sigma = sympy.symbols(rx)
+    return sigma
+
+
+def sigma_a(nuc):
+    sigma_a_name = 'sigma_a_{0}'.format(nuc)
+    sig_a = SIGMA.get(sigma_a_name, [0])[0]
+    if sig_a > 0:
+        sig_a = sympy.symbols(sigma_a_name)
+    return sig_a
+
+
+def genexponent(nuc):
+    lamda_1 = decay_const(nuc)
+    sig_a = sigma_a(nuc)
+    return sympy.exp(-(lamda_1 + sig_a*phi)*t)
+
+
+def gentotalbranch(chain):
     terms = []
-    for rx in xs_rxs:
-        if rx not in rxs:
+    for f, t in zip(chain[:-1], chain[1:]):
+        lambda_i = decay_const(f)
+        gamma_rx = gamma(f, t)
+        sig_rx = sigma_rx(f, t)
+        term = (gamma_rx * lambda_i) + (sig_rx * phi)
+        terms.append(term)
+    return sympy.Mul(*terms)
+
+
+def genci(nuc, chain):
+    terms = []
+    lambda_i = decay_const(nuc)
+    sig_a_i = sigma_a(nuc)
+    part_i = lambda_i + (sig_a_i * phi)
+    for j in chain:
+        if j == nuc:
             continue
-        parname = rxs[rx]
-        par0 = sympy.symbols('{0}_0'.format(parname))
-        # sigma_rx_par = sympy.MatrixSymbol('sigma_{0}_{1}'.format(rx, parname), 1, G)
-        sigma_rx_par = sympy.Symbol('sigma_{0}_{1}'.format(rx, parname))
-        # expr += sympy.exp((sigma_rx_par*phi)[0] * t) * par0
-        terms.append(sympy.exp((sigma_rx_par*phi) * t) * par0)
+        lambda_j = decay_const(j)
+        sig_a_j = sigma_a(j)
+        part_j = lambda_j + sig_a * phi
+        term = 1 / (part_j - part_i)
+        terms.append(term)
+    return sympy.Mul(*terms)
+
+
+def genciexp(chain):
+    terms = []
+    for nuc in chain:
+        ci = genci(nuc, chain)
+        exp = genexponent(nuc)
+        term = ci * exp
+        terms.append(term)
     return sympy.Add(*terms)
+
+
+def genchainexpr(chain):
+    nuc0 = sympy.symbols('{0}_0'.format(chain[0]))
+    if len(chain) == 1:
+        return nuc0 * genexponent(chain[0])
+    tb = gentotalbranch(chain)
+    ce = genciexp(chain)
+    return nuc0 * tb * cd
+
 
 def gennuc(nuc):
     nuc0, nuc1 = sympy.symbols('{0}_0 {0}_1'.format(nuc))
