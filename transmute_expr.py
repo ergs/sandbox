@@ -1,5 +1,7 @@
 import textwrap
 import json
+from functools import lru_cache
+
 import sympy
 from sympy.codegen.ast import Assignment, CodeBlock
 
@@ -101,10 +103,11 @@ t = sympy.symbols('t')
 # phi = sympy.MatrixSymbol('phi', G, 1)
 phi = sympy.symbols('phi')
 
+@lru_cache(1024)
 def decay_const(nuc):
     return DATA['symbols']['lambda_' + nuc]
 
-
+@lru_cache(1024)
 def gamma(f, t):
     prefix = 'gamma_{0}_{1}_'.format(f, t)
     possible = FROM_TO[f][t]
@@ -117,6 +120,7 @@ def gamma(f, t):
     return DATA['symbols'].get(rx, 0)
 
 
+@lru_cache(1024)
 def sigma_rx(f, t):
     possible = FROM_TO[f][t]
     for p in possible:
@@ -131,6 +135,7 @@ def sigma_rx(f, t):
     return sigma
 
 
+@lru_cache(1024)
 def sigma_a(nuc):
     sigma_a_name = 'sigma_a_{0}'.format(nuc)
     sig_a = SIGMA.get(sigma_a_name, [0])[0]
@@ -139,6 +144,7 @@ def sigma_a(nuc):
     return sig_a
 
 
+@lru_cache(1024)
 def genexponent(nuc):
     lambda_1 = decay_const(nuc)
     sig_a = sigma_a(nuc)
@@ -148,6 +154,7 @@ def genexponent(nuc):
         import pdb; pdb.set_trace()
 
 
+@lru_cache(1024)
 def gentotalbranch(chain):
     terms = []
     for f, t in zip(chain[:-1], chain[1:]):
@@ -159,6 +166,7 @@ def gentotalbranch(chain):
     return sympy.Mul(*terms)
 
 
+@lru_cache(1024)
 def genci(nuc, chain):
     terms = []
     lambda_i = decay_const(nuc)
@@ -175,6 +183,7 @@ def genci(nuc, chain):
     return sympy.Mul(*terms)
 
 
+@lru_cache(1024)
 def genciexp(chain):
     terms = []
     for nuc in chain:
@@ -185,6 +194,7 @@ def genciexp(chain):
     return sympy.Add(*terms)
 
 
+@lru_cache(1024)
 def genchainexpr(chain):
     nuc0 = sympy.symbols('{0}_0'.format(chain[0]))
     if len(chain) == 1:
