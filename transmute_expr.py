@@ -10,6 +10,8 @@ TEMPLATE = r"""
 
 #define I (%%I%%)
 #define R (9)
+#define T (%%T%%)
+#define PHI (%%PHI%%)
 
 double* transmute(double* N0, double t, double phi, double sigma[I][R]);
 
@@ -28,10 +30,10 @@ int main() {
     double* N1;
     double sigma[I][R] = %%SIGMA_ARRAY%%;
 
-    N1 = transmute(N0, 10.0, 4e-10, sigma);
+    N1 = transmute(N0, T, 0, sigma);
 
     for (i=0; i < I; i++) {
-        printf("%d %e\n", i, N1[i]);
+        printf("%d %e\n", i, PHI, N1[i]);
     }
     return(0);
 }
@@ -235,7 +237,8 @@ def generate_sigma_array():
     return [[SIGMA[i][0] if i in used_sigmas else 0.0 for i in j] for j in sigma_symbols]
 
 if __name__ == '__main__':
-    nucs = DATA['nucs'][:346]
+    NUCS = DATA['nucs']
+    nucs = ['Ar40']
     system = CodeBlock(*list(map(gennuc, nucs)))
 
     sigma_symbols = sorted([i.name for i in system.free_symbols if
@@ -252,13 +255,20 @@ if __name__ == '__main__':
     code = sympy.ccode(system)
 
     generated_code = TEMPLATE
+
+    input_data = [0.0]*len(sigma_array)
+
+    input_data[NUCS.index("Cl40")] = 1.0
+    input_time = 81.0
+
     for val, repl in {
         "I": len(sigma_array),
+        "T": input_time,
+        "PHI": 0.0,
         "SIGMA_ARRAY": str(sigma_array).replace('[', '{').replace(']', '}'),
         "CODE": textwrap.indent(code, '    '),
         # For testing
-        "N0": str([0.]*(len(sigma_array) - 1) + [1.0]).replace('[',
-            '{').replace(']', '}'),
+        "N0": str(input_data).replace('[', '{').replace(']', '}'),
     }.items():
         generated_code = generated_code.replace("%%" + val + "%%", str(repl))
 
