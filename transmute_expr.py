@@ -30,10 +30,10 @@ int main() {
     double* N1;
     double sigma[I][R] = %%SIGMA_ARRAY%%;
 
-    N1 = transmute(N0, T, 0, sigma);
+    N1 = transmute(N0, T, PHI, sigma);
 
     for (i=0; i < I; i++) {
-        printf("%d %e\n", i, PHI, N1[i]);
+        printf("%d %e\n", i, N1[i]);
     }
     return(0);
 }
@@ -264,7 +264,7 @@ if __name__ == '__main__':
     for val, repl in {
         "I": len(sigma_array),
         "T": input_time,
-        "PHI": 0.0,
+        "PHI": 4e-10,
         "SIGMA_ARRAY": str(sigma_array).replace('[', '{').replace(']', '}'),
         "CODE": textwrap.indent(code, '    '),
         # For testing
