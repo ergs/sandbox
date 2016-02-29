@@ -82,7 +82,7 @@ def make_chains(f, curr=()):
     if len(curr) == 0:
         curr = (f,)
     chains = [curr]
-    if len(curr) > 21:
+    if len(curr) > 2:
         return chains
     for t in FROM_TO.get(f, ()):
         if t in curr:
@@ -213,7 +213,7 @@ def gennuc(nuc):
             continue
         NUM += 1
         terms.append(genchainexpr(chain))
-    # print(NUM, nuc)
+    #print(NUM, nuc)
     rhs = sympy.Add(*terms)
     eq = Assignment(nuc1, rhs)
     return eq
@@ -248,7 +248,7 @@ def generate_sigma_array():
 
 if __name__ == '__main__':
     NUCS = DATA['nucs']
-    nucs = ['Ar40']
+    nucs = ['K40']
     system = CodeBlock(*list(map(gennuc, nucs)))
 
     sigma_symbols = sorted([i.name for i in system.free_symbols if
