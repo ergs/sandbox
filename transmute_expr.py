@@ -268,7 +268,7 @@ if __name__ == '__main__':
 
     input_data = [0.0]*len(sigma_array)
 
-    input_data[NUCS.index("Cl40")] = 1.0
+    input_data[NUCS.index("K39")] = 1.0
     input_time = 81.0
 
     for val, repl in {
