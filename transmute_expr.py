@@ -100,7 +100,7 @@ def create_chains():
         #print(nuc)
         CHAINS.update(make_chains(nuc))
 
-    CHAINS = sorted(CHAINS, key=lambda c: c[-1])
+    CHAINS = sorted(CHAINS, key=lambda c: list(reversed(c)))
 
 create_chains()
 
