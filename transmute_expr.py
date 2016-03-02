@@ -28,8 +28,9 @@ double* transmute(double* N0, double t, double phi, double sigma[I][R]) {
 
 int main() {
     int i;
-    double N0[I] = %%N0%%;
     double* N1;
+    double N0[I] = %%N0%%;
+
     double sigma[I][R] = %%SIGMA_ARRAY%%;
 
     N1 = transmute(N0, T, PHI, sigma);
