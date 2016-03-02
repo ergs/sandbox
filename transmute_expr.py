@@ -3,6 +3,8 @@ import json
 from functools import lru_cache
 from collections import defaultdict
 
+import networkx
+
 import sympy
 from sympy.codegen.ast import Assignment, CodeBlock
 
@@ -63,6 +65,7 @@ gamma_base = '^gamma_([A-Z][a-z]?\d+)_'
 
 # Create from -> to nuclide mapping
 FROM_TO = defaultdict(lambda: defaultdict(set))
+CHAIN_GRAPH = set()
 
 def create_from_to():
     for key in DATA['symbols'].keys():
@@ -78,31 +81,29 @@ def create_from_to():
 
 create_from_to()
 
-def make_chains(f, curr=()):
-    if len(curr) == 0:
-        curr = (f,)
-    chains = [curr]
-    if len(curr) > 20:
-        return chains
-    for t in FROM_TO.get(f, ()):
-        if t in curr:
-            continue  # get rid of cycles
-        tchain = curr + (t,)
-        newchains = make_chains(t, tchain)
-        chains.extend(newchains)
-    return chains
-
 def create_chains():
     global CHAINS
 
     CHAINS = set()
-    for nuc in DATA['nucs'][:346]:
-        #print(nuc)
-        CHAINS.update(make_chains(nuc))
+    cutoff_nucs = DATA['nucs']
 
-    CHAINS = sorted(CHAINS, key=lambda c: list(reversed(c)))
+    for nuc in cutoff_nucs:
+        #print(nuc)
+        CHAIN_GRAPH.add(('start', nuc))
+        CHAIN_GRAPH.add((nuc, 'end'))
+        for t in FROM_TO[nuc]:
+            CHAIN_GRAPH.add((nuc, t))
+
+    G = networkx.DiGraph(list(CHAIN_GRAPH))
+    CHAINS = sorted(networkx.all_simple_paths(G, 'start', 'end', 22), key=lambda c: list(reversed(c)))
+
+    CHAINS = [i[1:][:-1] for i in CHAINS]
 
 create_chains()
+
+print(len(CHAINS))
+print(max(CHAINS, key=len))
+print(min(CHAINS, key=len))
 
 t = sympy.symbols('t')
 # G = 1
