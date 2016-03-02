@@ -82,7 +82,7 @@ def make_chains(f, curr=()):
     if len(curr) == 0:
         curr = (f,)
     chains = [curr]
-    if len(curr) > 35:
+    if len(curr) > 20:
         return chains
     for t in FROM_TO.get(f, ()):
         if t in curr:
