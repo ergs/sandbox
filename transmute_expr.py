@@ -1,6 +1,7 @@
 import textwrap
 import json
 from functools import lru_cache
+from collections import defaultdict
 
 import sympy
 from sympy.codegen.ast import Assignment, CodeBlock
@@ -61,27 +62,19 @@ xs_rxs = ['gamma', 'z_2n', 'z_3n', 'alpha', 'fission', 'proton', 'gamma_1', 'z_2
 gamma_base = '^gamma_([A-Z][a-z]?\d+)_'
 
 # Create from -> to nuclide mapping
-FROM_TO = {}
-def add_from_to(f, t, k):
-    if f not in FROM_TO:
-        FROM_TO[f] = {}
-    to_nucs = FROM_TO[f]
-    if t not in to_nucs:
-        to_nucs[t] = set()
-    rxs = to_nucs[t]
-    rxs.add(k)
+FROM_TO = defaultdict(lambda: defaultdict(set))
 
 def create_from_to():
     for key in DATA['symbols'].keys():
         if not key.startswith('gamma_'):
             continue
         _, f, t, *_ = key.split('_')
-        add_from_to(f, t, key)
+        FROM_TO[f][t].add(key)
 
     for sig, (val, f, t) in SIGMA.items():
         if t is None or val < 1e-200:
             continue
-        add_from_to(f, t, sig)
+        FROM_TO[f][t].add(sig)
 
 create_from_to()
 
@@ -89,7 +82,7 @@ def make_chains(f, curr=()):
     if len(curr) == 0:
         curr = (f,)
     chains = [curr]
-    if len(curr) > 2:
+    if len(curr) > 35:
         return chains
     for t in FROM_TO.get(f, ()):
         if t in curr:
@@ -101,8 +94,6 @@ def make_chains(f, curr=()):
 
 def create_chains():
     global CHAINS
-
-    import pudb;pudb.set_trace()
 
     CHAINS = set()
     for nuc in DATA['nucs'][:346]:
