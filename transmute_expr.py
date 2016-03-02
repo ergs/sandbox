@@ -43,13 +43,17 @@ int main() {
 
 """
 
-with open('transmute_data.json') as f:
-    DATA = json.load(f)
+def load_data():
+    global DATA
+    global SIGMA
 
-with open('sigma.json') as f:
-    SIGMA = json.load(f)
+    with open('transmute_data.json') as f:
+        DATA = json.load(f)
 
+    with open('sigma.json') as f:
+        SIGMA = json.load(f)
 
+load_data()
 
 decay_rxs = ['bminus', 'bplus', 'ec', 'alpha', 'it', 'sf', 'bminus_n']
 xs_rxs = ['gamma', 'z_2n', 'z_3n', 'alpha', 'fission', 'proton', 'gamma_1', 'z_2n_1']
@@ -67,17 +71,19 @@ def add_from_to(f, t, k):
     rxs = to_nucs[t]
     rxs.add(k)
 
-for key in DATA['symbols'].keys():
-    if not key.startswith('gamma_'):
-        continue
-    _, f, t, *_ = key.split('_')
-    add_from_to(f, t, key)
+def create_from_to():
+    for key in DATA['symbols'].keys():
+        if not key.startswith('gamma_'):
+            continue
+        _, f, t, *_ = key.split('_')
+        add_from_to(f, t, key)
 
-for sig, (val, f, t) in SIGMA.items():
-    if t is None or val < 1e-200:
-        continue
-    add_from_to(f, t, sig)
+    for sig, (val, f, t) in SIGMA.items():
+        if t is None or val < 1e-200:
+            continue
+        add_from_to(f, t, sig)
 
+create_from_to()
 
 def make_chains(f, curr=()):
     if len(curr) == 0:
@@ -93,11 +99,19 @@ def make_chains(f, curr=()):
         chains.extend(newchains)
     return chains
 
-CHAINS = set()
-for nuc in DATA['nucs'][:346]:
-    #print(nuc)
-    CHAINS.update(make_chains(nuc))
-CHAINS = sorted(CHAINS, key=lambda c: c[-1])
+def create_chains():
+    global CHAINS
+
+    import pudb;pudb.set_trace()
+
+    CHAINS = set()
+    for nuc in DATA['nucs'][:346]:
+        #print(nuc)
+        CHAINS.update(make_chains(nuc))
+
+    CHAINS = sorted(CHAINS, key=lambda c: c[-1])
+
+create_chains()
 
 t = sympy.symbols('t')
 # G = 1
@@ -247,13 +261,10 @@ def generate_sigma_array():
 
     return [[SIGMA[i][0] if i in used_sigmas else 0.0 for i in j] for j in sigma_symbols]
 
-if __name__ == '__main__':
+def main():
     NUCS = DATA['nucs']
     nucs = ['K40']
     system = CodeBlock(*list(map(gennuc, nucs)))
-
-    sigma_symbols = sorted([i.name for i in system.free_symbols if
-        i.name.startswith('sigma')])
 
     sigma_map = sigma_symbol_to_indexed()
     nuc_map = nuc_symbol_to_indexed()
@@ -304,3 +315,6 @@ if __name__ == '__main__':
 
     #with open('system-cse-C.txt', 'w') as f:
     #    f.write(sympy.ccode(system_cse))
+
+if __name__ == '__main__':
+    main()
