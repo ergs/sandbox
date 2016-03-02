@@ -263,7 +263,7 @@ if __name__ == '__main__':
 
     sigma_array = generate_sigma_array()
 
-    code = sympy.ccode(system)
+    code = sympy.ccode(system, order='none')
 
     generated_code = TEMPLATE
 
