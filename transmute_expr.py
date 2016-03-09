@@ -219,7 +219,7 @@ def gennuc(nuc):
         if chain[-1] != nuc:
             continue
         NUM += 1
-        terms.append(genchainexpr(chain))
+        terms.append(genchainexpr(tuple(chain)))
     #print(NUM, nuc)
     rhs = sympy.Add(*terms)
     eq = Assignment(nuc1, rhs)
