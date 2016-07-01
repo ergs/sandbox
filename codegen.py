@@ -1,6 +1,6 @@
 from sympy import ccode, fcode, dsolve
 
-def codegen(expr, lang, indent='    ', ):
+def codegen(expr, lang, indent='    ', ics=None):
     if lang == 'C':
         code = ccode
     elif lang == 'Fortran':
@@ -9,7 +9,7 @@ def codegen(expr, lang, indent='    ', ):
         raise ValueError("Lang must be 'C' or 'Fortran'")
 
     try:
-        sol = dsolve(expr)
+        sol = dsolve(expr, ics=ics)
     except ValueError:
         # Not an ODE
         return code(expr)
