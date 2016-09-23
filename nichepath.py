@@ -3,6 +3,10 @@
 Created on Mon Sep 19 14:18:30 2016
 
 @author: adam
+
+The function randomniche takes as input, the number of desired niches and the 
+node that should act as the start point (with "mine" as the default startkey)
+Produces a set containing the unique path.
 """
 
 import random
@@ -31,7 +35,8 @@ T = {
     }
 
 #randomniche generates a set of possible nodes along a path of niches
-#to change start point 
+#to change start point add new string in argument
+
 def randomniche(niches, choice = "mine"):
     nichelist = {choice}
     if niches == 1 or None in nichelist:
