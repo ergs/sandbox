@@ -81,7 +81,7 @@ def create_from_to():
 
 create_from_to()
 
-def create_chains():
+def create_chains(N):
     global CHAINS
 
     CHAINS = set()
@@ -95,15 +95,21 @@ def create_chains():
             CHAIN_GRAPH.add((nuc, t))
 
     G = networkx.DiGraph(list(CHAIN_GRAPH))
-    CHAINS = sorted(networkx.all_simple_paths(G, 'start', 'end', 22), key=lambda c: list(reversed(c)))
+    CHAINS = sorted(networkx.all_simple_paths(G, 'start', 'end', N), key=lambda c: list(reversed(c)))
 
     CHAINS = [i[1:][:-1] for i in CHAINS]
 
-create_chains()
+# From tests:
+# N = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+# len(CHAINS) = [4111, 6220, 9857, 16554, 29383, 55259, 107415, 213296,
+# 431038, 882474, 1819790, 3754210, 7697022]
+for N in range(2, 15):
+    print("N", N)
+    create_chains(N)
 
-print(len(CHAINS))
-print(max(CHAINS, key=len))
-print(min(CHAINS, key=len))
+    print("len(CHAINS)", len(CHAINS))
+    print("Max chain", max(CHAINS, key=len))
+    print("Min chain", min(CHAINS, key=len))
 
 t = sympy.symbols('t')
 # G = 1
