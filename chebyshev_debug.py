@@ -46,7 +46,7 @@ def CRAM_exp2(loops=2):
         #print(system)
         sol = dict(zip([p0, p1, p2, q1, q2, epsilon], nsolve(system, [p0, p1, p2, q1, q2, epsilon], [1, 1, 1, 1, 1, 0])))
         D = diff(E.subs(sol), t)
-        plot(E.subs(sol), (t, -1, 1))
+        plot(E.subs(sol), (t, -1, 1), block=False)
         # More 9's here means more accuracy, but we can't use 1 because of the singularity
         points = [-1, *nsolve_intervals(D, [-1, 0.99], maxsteps=300), 1]# mpf('0.9999999999999999999999999999999999999999999999999999999999999999999999999999')]
         print(points)
@@ -66,5 +66,5 @@ def CRAM_exp2(loops=2):
 #D = CRAM_exp2()
 
 rat_func = CRAM_exp2(8)
-print(rat_func)
+print(rat_func, block=False)
 plot(rat_func - exp(-t), (t, 0, 100))
