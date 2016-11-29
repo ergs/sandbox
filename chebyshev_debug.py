@@ -24,6 +24,7 @@ def nsolve_intervals(expr, bounds, division=30, **kwargs):
 
 @conserve_mpmath_dps
 def CRAM_exp2(loops=2):
+    import pudb;pudb.set_trace()
     import mpmath
     prec = 128
     mpmath.mp.dps = prec
